@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block title %}Number Stock{% endblock %}
+
+{% block content %}
+<h1>Number Stock</h1>
+<p class="page-desc">Upload and manage number lists (one number per line).</p>
+
+<div class="two-col">
+    <div class="card">
+        <h3>⬆ Upload Stock</h3>
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="stock_file" accept=".txt,.csv" required>
+            <p class="hint">Text file, one number per line</p>
+            <button class="btn btn-primary">Upload</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>📦 Available Stocks</h3>
+        {% if stock_files %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Count</th>
+                    <th>Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in stock_files %}
+                <tr>
+                    <td class="mono small">{{ s.name }}</td>
+                    <td><b>{{ s.count }}</b></td>
+                    <td class="small">{{ s.uploaded_at[:19] if s.uploaded_at else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">No stock files uploaded yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% block title %}{{ machine.id }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('machines') }}" class="back-link">← Back to Machines</a>
+<h1>🖥️ {{ machine.id }}</h1>
+
+<div class="machine-meta">
+    <span class="badge {{ 'badge-on' if machine.is_active else 'badge-off' }}">
+        {{ 'RUNNING' if machine.is_active else 'IDLE' }}
+    </span>
+    <span>Status: {{ machine.status }}</span>
+</div>
+
+<!-- Add Key -->
+<div class="card">
+    <h3>➕ Add / Update Key</h3>
+    <form method="post" action="{{ url_for('upsert_key', machine_id=machine.id) }}" class="form-grid">
+        <input name="key_id" placeholder="Key ID (e.g. key1)" required>
+        <input name="number" placeholder="Phone number" required>
+        <input name="password" placeholder="Password pattern" required>
+        <input name="limit" type="number" placeholder="Limit" value="100">
+        <input name="current_progress" type="number" placeholder="Progress" value="0">
+        <button type="submit" class="btn btn-success">Save Key</button>
+    </form>
+</div>
+
+<!-- Keys -->
+<div class="card">
+    <h3>🔑 Keys ({{ config|length }})</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Key ID</th>
+                <th>Number</th>
+                <th>Password Pattern</th>
+                <th>Progress</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, val in config.items() %}
+            <tr>
+                <td><b>{{ key }}</b></td>
+                <td class="mono">{{ val.number }}</td>
+                <td class="mono">{{ val.password }}</td>
+                <td>
+                    {{ val.current_progress }} / {{ val.limit }}
+                    <div class="mini-bar">
+                        {% set pct = (val.current_progress / val.limit * 100) if val.limit else 0 %}
+                        <div class="mini-fill" style="width: {{ pct }}%"></div>
+                    </div>
+                </td>
+                <td>
+                    <form method="post" action="{{ url_for('reset_key', machine_id=machine.id, key_id=key) }}" style="display:inline">
+                        <button class="btn btn-warning btn-sm">Reset</button>
+                    </form>
+                    <form method="post" action="{{ url_for('delete_key', machine_id=machine.id, key_id=key) }}" style="display:inline"
+                          onsubmit="return confirm('Delete key {{ key }}?')">
+                        <button class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="empty">No keys yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Raw Config -->
+<div class="card">
+    <h3>📝 Raw Config (JSON)</h3>
+    <form method="post" action="{{ url_for('update_config', machine_id=machine.id) }}">
+        <textarea name="config_json" rows="12" class="mono">{{ config | tojson(indent=4) }}</textarea>
+        <button type="submit" class="btn btn-primary">Update Config</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% block title %}Machine Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Machine Management</h1>
+        <p class="page-desc">Monitor and control all registered machines</p>
+    </div>
+</div>
+
+<div class="machine-grid">
+    {% for m in machines %}
+    <div class="machine-card {{ 'active' if m.is_active else '' }}">
+        <div class="machine-head">
+            <div class="machine-title">
+                <span class="status-dot {{ 'online' if m._online else 'offline' }}"></span>
+                <span class="machine-id">{{ m.id }}</span>
+            </div>
+            <span class="badge {{ 'badge-on' if m.is_active else 'badge-off' }}">
+                {{ 'RUNNING' if m.is_active else 'IDLE' }}
+            </span>
+        </div>
+        <div class="machine-stats">
+            <div class="machine-stat">
+                <div class="machine-stat-num">{{ m._stats.key_count }}</div>
+                <div class="machine-stat-label">Keys</div>
+            </div>
+            <div class="machine-stat">
+                <div class="machine-stat-num">{{ m._stats.total_progress }}/{{ m._stats.total_limit }}</div>
+                <div class="machine-stat-label">Progress</div>
+            </div>
+            <div class="machine-stat">
+                <div class="machine-stat-num">{{ m._stats.percent }}%</div>
+                <div class="machine-stat-label">Done</div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ m._stats.percent }}%"></div>
+        </div>
+        <div class="machine-actions">
+            <a href="{{ url_for('machine_detail', machine_id=m.id) }}" class="btn btn-primary btn-sm">View Details</a>
+            <button class="btn {{ 'btn-danger' if m.is_active else 'btn-success' }} btn-sm"
+                    onclick="toggleMachine('{{ m.id }}')">
+                {{ '⏹ Stop' if m.is_active else '▶ Start' }}
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty">No machines found</div>
+    {% endfor %}
+</div>
+
+<style>
+.machine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+}
+.machine-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+}
+.machine-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+.machine-card.active {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+.machine-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.machine-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.machine-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+}
+.machine-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+.machine-stat-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+}
+.machine-stat-label {
+    font-size: 11px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+.machine-actions { display: flex; gap: 8px; }
+</style>
+
+<script>
+async function toggleMachine(id) {
+    const res = await fetch(`/machines/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+        showToast(data.is_active ? 'Machine started' : 'Machine stopped',
+                  data.is_active ? 'success' : 'info');
+        setTimeout(() => location.reload(), 800);
+    }
+}
+</script>
+{% endblock %}

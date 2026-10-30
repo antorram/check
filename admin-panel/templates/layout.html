@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Checker Admin{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-icon">🔷</div>
+                    <div class="brand-text">
+                        <div class="brand-name">SHAKIL <span class="pro">PRO</span></div>
+                        <div class="brand-sub">Dashboard v2.13</div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">MAIN</div>
+                <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if active_page == 'dashboard' else '' }}">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="nav-section">SYSTEM & CONFIGURATION</div>
+                <a href="{{ url_for('credentials') }}" class="nav-item {{ 'active' if active_page == 'credentials' else '' }}">
+                    <span class="nav-icon">🔑</span>
+                    <span>Valid Phone & Password</span>
+                </a>
+                <a href="{{ url_for('stock') }}" class="nav-item {{ 'active' if active_page == 'stock' else '' }}">
+                    <span class="nav-icon">📦</span>
+                    <span>Number Stock</span>
+                </a>
+                <a href="{{ url_for('password_format') }}" class="nav-item {{ 'active' if active_page == 'password_format' else '' }}">
+                    <span class="nav-icon">📝</span>
+                    <span>Password Format</span>
+                </a>
+                <a href="{{ url_for('machines') }}" class="nav-item {{ 'active' if active_page == 'machines' else '' }}">
+                    <span class="nav-icon">🖥️</span>
+                    <span>Machine Management</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="health-mini" id="healthMini">
+                    <div class="health-row">
+                        <span>CPU</span>
+                        <div class="health-bar"><div id="cpuBar" class="health-fill"></div></div>
+                        <span id="cpuText" class="health-val">-</span>
+                    </div>
+                    <div class="health-row">
+                        <span>RAM</span>
+                        <div class="health-bar"><div id="ramBar" class="health-fill"></div></div>
+                        <span id="ramText" class="health-val">-</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <button class="icon-btn" id="menuToggle">☰</button>
+                <div class="topbar-spacer"></div>
+
+                <div class="topbar-actions">
+                    <button class="icon-btn" id="themeToggle" title="Toggle theme">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                    <button class="icon-btn" title="Notifications">🔔<span class="badge-dot"></span></button>
+                    <div class="user-menu" id="userMenu">
+                        <div class="avatar">S</div>
+                        <div class="user-info">
+                            <div class="user-name">shakilahmedttt</div>
+                            <div class="user-role">Administrator</div>
+                        </div>
+                        <span class="caret">▾</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for cat, msg in messages %}
+                        <div class="flash flash-{{ cat }}">
+                            <span class="flash-icon">{{ '✓' if cat == 'success' else '⚠' }}</span>
+                            {{ msg }}
+                        </div>
+                    {% endfor %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

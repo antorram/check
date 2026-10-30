@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Checker Admin{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🔷 SHAKIL <span class="pro">PRO</span></div>
+                <div class="subtitle">◉ Dashboard</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">MAIN</div>
+                <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if active_page == 'dashboard' else '' }}">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+
+                <div class="nav-section">SYSTEM & CONFIGURATION</div>
+                <a href="{{ url_for('credentials') }}" class="nav-item {{ 'active' if active_page == 'credentials' else '' }}">
+                    <span class="icon">🔑</span> Valid Phone & Password
+                </a>
+                <a href="{{ url_for('stock') }}" class="nav-item {{ 'active' if active_page == 'stock' else '' }}">
+                    <span class="icon">📦</span> Number Stock
+                </a>
+                <a href="{{ url_for('password_format') }}" class="nav-item {{ 'active' if active_page == 'password_format' else '' }}">
+                    <span class="icon">📝</span> Password Format & Settings
+                </a>
+                <a href="{{ url_for('machines') }}" class="nav-item {{ 'active' if active_page == 'machines' else '' }}">
+                    <span class="icon">🖥️</span> Machine Management
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="main">
+            <header class="topbar">
+                <button class="menu-toggle">☰</button>
+                <div class="user-info">
+                    <div class="user-avatar">S</div>
+                    <span class="username">shakilahmedttt</span>
+                    <span class="caret">▾</span>
+                </div>
+            </header>
+
+            <div class="content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for cat, msg in messages %}
+                        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+                    {% endfor %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,221 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Dashboard Overview</h1>
+        <p class="page-desc">Real-time overview of your checker system</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-light" onclick="location.reload()">🔄 Refresh</button>
+    </div>
+</div>
+
+<!-- Top Stats -->
+<div class="stats-grid">
+    <div class="stat-card stat-blue">
+        <div class="stat-icon">🖥️</div>
+        <div class="stat-content">
+            <div class="stat-label">Total Machines</div>
+            <div class="stat-value">{{ stats.total_machines }}</div>
+            <div class="stat-meta">
+                <span class="dot dot-green"></span> {{ stats.online_machines }} online
+                <span class="dot dot-gray"></span> {{ stats.offline_machines }} offline
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card stat-purple">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-content">
+            <div class="stat-label">Total Sequences</div>
+            <div class="stat-value">{{ stats.total_sequences }}</div>
+            <div class="stat-meta">
+                <span class="dot dot-blue"></span> {{ stats.in_progress }} in progress
+                <span class="dot dot-green"></span> {{ stats.completed }} complete
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card stat-green">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+            <div class="stat-label">Avg. Progress</div>
+            <div class="stat-value">{{ stats.avg_progress }}%</div>
+            <div class="stat-meta">Pooled across all sequences</div>
+        </div>
+    </div>
+
+    <div class="stat-card stat-orange">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-content">
+            <div class="stat-label">Success Rate</div>
+            <div class="stat-value">{{ stats.success_rate }}%</div>
+            <div class="stat-meta">{{ stats.success_count }} successful logins</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-row">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3>Activity - Last 7 Days</h3>
+            <span class="chart-total">{{ stats.total_logs }} total logs</span>
+        </div>
+        <div class="chart-body">
+            {% set chart_values = stats.chart_data['values'] if 'values' in stats.chart_data else stats.chart_data.values %}
+            {% set chart_labels = stats.chart_data['labels'] if 'labels' in stats.chart_data else stats.chart_data.labels %}
+            {% set max_val = chart_values | max %}
+            {% set max_val = max_val if max_val > 0 else 1 %}
+            {% set points = [] %}
+            {% for v in chart_values %}
+                {% set x = loop.index0 * 100 + 50 %}
+                {% set y = 180 - (v / max_val * 150) %}
+                {% set _ = points.append(x ~ ',' ~ y) %}
+            {% endfor %}
+            <svg class="line-chart" viewBox="0 0 700 200" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
+                        <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <polyline points="{{ points | join(' ') }}" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                <polygon points="50,180 {{ points | join(' ') }} {{ (chart_values|length - 1) * 100 + 50 }},180" fill="url(#lineGrad)"/>
+                {% for v in chart_values %}
+                    {% set x = loop.index0 * 100 + 50 %}
+                    {% set y = 180 - (v / max_val * 150) %}
+                    <circle cx="{{ x }}" cy="{{ y }}" r="4" fill="#6366f1"/>
+                {% endfor %}
+            </svg>
+            <div class="chart-labels">
+                {% for label in chart_labels %}
+                    <span>{{ label[5:] }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-card donut-card">
+        <div class="chart-header">
+            <h3>Status Distribution</h3>
+        </div>
+        <div class="donut-wrap">
+            {% set colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] %}
+            <svg viewBox="0 0 200 200" class="donut">
+                {% set total = stats.total_logs if stats.total_logs > 0 else 1 %}
+                {% set ns = namespace(offset=0, idx=0) %}
+                {% set circumference = 502.65 %}
+                {% for ct in stats.credential_types[:6] %}
+                    {% if ct.count > 0 %}
+                        {% set pct = ct.count / total %}
+                        {% set dash = pct * circumference %}
+                        <circle cx="100" cy="100" r="80"
+                                fill="none"
+                                stroke="{{ colors[ns.idx % 6] }}"
+                                stroke-width="30"
+                                stroke-dasharray="{{ dash }} {{ circumference - dash }}"
+                                stroke-dashoffset="{{ -ns.offset }}"
+                                transform="rotate(-90 100 100)"/>
+                        {% set ns.offset = ns.offset + dash %}
+                        {% set ns.idx = ns.idx + 1 %}
+                    {% endif %}
+                {% endfor %}
+                <text x="100" y="95" text-anchor="middle" font-size="24" font-weight="800" fill="currentColor">{{ stats.total_logs }}</text>
+                <text x="100" y="115" text-anchor="middle" font-size="11" fill="#9ca3af">TOTAL</text>
+            </svg>
+            <div class="donut-legend">
+                {% set ns2 = namespace(idx=0) %}
+                {% for ct in stats.credential_types[:6] %}
+                    {% if ct.count > 0 %}
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background: {{ colors[ns2.idx % 6] }}"></span>
+                        <span class="legend-label">{{ ct.display }}</span>
+                        <span class="legend-value">{{ ct.count }}</span>
+                    </div>
+                    {% set ns2.idx = ns2.idx + 1 %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Credentials Grid -->
+<div class="section-header">
+    <h2>Credentials by Type</h2>
+    <a href="{{ url_for('credentials') }}" class="btn btn-primary btn-sm">View All →</a>
+</div>
+
+<div class="cred-grid">
+    {% for c in stats.credential_types %}
+    <div class="cred-card cred-{{ c.key }}">
+        <div class="cred-top">
+            <span class="cred-badge">{{ c.display }}</span>
+            <a href="{{ url_for('export_credentials', status=c.key) }}" class="cred-dl" title="Download CSV">⬇</a>
+        </div>
+        <div class="cred-num">{{ c.count }}</div>
+        <div class="cred-pct">{{ c.percent }}% of total</div>
+        <div class="cred-bar">
+            <div class="cred-bar-fill" style="width: {{ c.percent }}%"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Bottom Row -->
+<div class="bottom-row">
+    <div class="card">
+        <div class="card-header">
+            <h3>🕒 Recent Activity</h3>
+            <a href="{{ url_for('credentials') }}" class="link">View all</a>
+        </div>
+        <div class="activity-list">
+            {% for log in recent_logs %}
+            <div class="activity-item">
+                <div class="activity-dot status-{{ log.status }}"></div>
+                <div class="activity-content">
+                    <div class="activity-title">
+                        <span class="mono">{{ log.phone_number }}</span>
+                        <span class="status-pill status-{{ log.status }}">{{ log.status }}</span>
+                    </div>
+                    <div class="activity-time">{{ log.created_at[:19] if log.created_at else '' }}</div>
+                </div>
+            </div>
+            {% else %}
+            <p class="empty">No recent activity</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>🖥️ Top Machines</h3>
+            <a href="{{ url_for('machines') }}" class="link">View all</a>
+        </div>
+        <div class="machine-list">
+            {% for m in machines %}
+            <div class="machine-list-item">
+                <div class="machine-list-info">
+                    <div class="machine-list-name">
+                        {{ m.id }}
+                        <span class="status-dot {{ 'online' if m._online else 'offline' }}"></span>
+                    </div>
+                    <div class="machine-list-sub">{{ m._stats.key_count }} keys</div>
+                </div>
+                <div class="machine-list-progress">
+                    <div class="mini-bar-lg">
+                        <div class="mini-fill-lg" style="width: {{ m._stats.percent }}%"></div>
+                    </div>
+                    <span class="machine-list-pct">{{ m._stats.percent }}%</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="empty">No machines</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

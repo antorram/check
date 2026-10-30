@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block title %}Machine Management{% endblock %}
+
+{% block content %}
+<h1>Machine Management</h1>
+<p class="page-desc">Manage all registered machines and their sequences.</p>
+
+<div class="machine-grid">
+    {% for m in machines %}
+    <div class="machine-card {{ 'active' if m.is_active else '' }}">
+        <div class="machine-head">
+            <span class="machine-id">🖥️ {{ m.id }}</span>
+            <span class="badge {{ 'badge-on' if m.is_active else 'badge-off' }}">
+                {{ 'RUNNING' if m.is_active else 'IDLE' }}
+            </span>
+        </div>
+        <div class="machine-stats">
+            <div><b>{{ m._stats.key_count }}</b><br><small>Keys</small></div>
+            <div><b>{{ m._stats.total_progress }}</b>/{{ m._stats.total_limit }}<br><small>Progress</small></div>
+            <div><b>{{ m._stats.percent }}%</b><br><small>Done</small></div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ m._stats.percent }}%"></div>
+        </div>
+        <div class="machine-actions">
+            <a href="{{ url_for('machine_detail', machine_id=m.id) }}" class="btn btn-primary btn-sm">View</a>
+            <button class="btn {{ 'btn-danger' if m.is_active else 'btn-success' }} btn-sm"
+                    onclick="toggleMachine('{{ m.id }}')">
+                {{ 'Stop' if m.is_active else 'Start' }}
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <p class="empty">No machines found</p>
+    {% endfor %}
+</div>
+
+<script>
+async function toggleMachine(id) {
+    const res = await fetch(`/machines/${id}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) location.reload();
+}
+</script>
+{% endblock %}

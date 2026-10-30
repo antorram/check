@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Logs{% endblock %}
+
+{% block content %}
+<h1>📋 Phone Logs</h1>
+
+<form method="get" class="filter-bar">
+    <select name="status">
+        <option value="">All statuses</option>
+        {% for s in statuses %}
+            <option value="{{ s }}" {{ 'selected' if s == status_filter else '' }}>{{ s }}</option>
+        {% endfor %}
+    </select>
+    <input name="number" placeholder="Search number…" value="{{ number_filter }}">
+    <input name="limit" type="number" value="{{ limit }}" style="width:90px">
+    <button class="btn btn-blue">Filter</button>
+    <a href="{{ url_for('logs') }}" class="btn btn-yellow">Clear</a>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Phone Number</th>
+            <th>Status</th>
+            <th>Password</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td class="mono small">{{ log.created_at[:19] if log.created_at else '' }}</td>
+            <td class="mono">{{ log.phone_number }}</td>
+            <td><span class="status-pill status-{{ log.status }}">{{ log.status }}</span></td>
+            <td class="mono">{{ log.password or '' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="empty">No logs</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
